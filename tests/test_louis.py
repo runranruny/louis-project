@@ -137,6 +137,25 @@ class ImportSheetTest(unittest.TestCase):
         self.assertEqual(data.posts[0]["caption_hook"], "")
         self.assertEqual(louis.validate(data)[0], [])
 
+    def test_import_japanese_sheet(self):
+        J = louis.HEADER_JA
+        path = self.tmp / "sheet.json"
+        p = {louis.TAB_JA[t]: [J[t]] for t in louis.SHEET_TABS}
+        p["動画"].append(["V001", "この顔に騙されてはいけません", "A：ギャップ"])
+        p["投稿"].append(["P001-IG", "V001", "Instagram", "2026-11-23", "2026-11-23 19:00", "", "投稿済み"])
+        p["数値"].append(["P001-IG", "24時間後", "2026-11-24 19:30", "IGアプリ", "820"])
+        p["フォロワー"].append(["2026-11-23", "TikTok", "3", "2026-11-23 21:50", "TikTokアプリ"])
+        p["素材"].append(["IMG_0001.MOV", "2026-11-20", "12", "棚の上から見下ろす", "無表情"])
+        path.write_text(__import__("json").dumps(p, ensure_ascii=False), encoding="utf-8")
+        self.assertEqual(louis.main(["--root", str(self.tmp), "import-sheet", str(path)]), 0)
+        data = louis.load_data(self.tmp)
+        self.assertEqual(louis.validate(data)[0], [])
+        self.assertEqual(data.videos[0]["concept"], "A")
+        self.assertEqual((data.posts[0]["platform"], data.posts[0]["status"]), ("instagram", "posted"))
+        self.assertEqual((data.metrics[0]["snapshot"], data.metrics[0]["source"]), ("24h", "manual_app"))
+        self.assertEqual(data.followers[0]["platform"], "tiktok")
+        self.assertTrue((self.tmp / "data" / "materials.csv").exists())
+
     def test_import_rejects_wrong_header(self):
         before = (self.tmp / "data" / "videos.csv").read_text(encoding="utf-8")
         path = self._payload(videos=[["title", "video_id"]])

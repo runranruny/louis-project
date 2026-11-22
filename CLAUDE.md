@@ -25,6 +25,9 @@
 - `metrics.csv`：指標スナップショット。`snapshot` は 24h / 72h / 7d / other。`captured_at` と `source` 必須
 - `followers.csv`：日次フォロワー数
 - `concept_changes.csv`：企画・コンセプト定義の変更履歴
+- `materials.csv`：動画素材リスト（シート「素材」タブ）。素材本体は Drive の `01_RAW`
+
+シートはタブ名・見出し・選択肢が日本語（動画／投稿／数値／フォロワー／企画変更履歴／素材）。`import-sheet` が内部の英語キーに変換する（対応表は `scripts/louis.py` の `TAB_JA`・`HEADER_JA`・`VALUE_JA`）。
 
 日時はすべてJST、`YYYY-MM-DD HH:MM` 形式。**取得できない指標は空欄**（0を入れない。0は「本当に0だった」時だけ）。
 

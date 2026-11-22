@@ -3,7 +3,7 @@ description: LOUIS DAILY REPORT を作成する（毎日22:00の定期実行で�
 ---
 LOUIS DAILY REPORT を作成してください。日付の指定があれば $ARGUMENTS を使い、なければ今日（JST）です。
 
-0. **Google Sheetsから最新データを取り込む**：`config/project.toml` の `[google].sheet_id` のシートについて、Google Sheetsコネクタの get_values で `videos!A:L`、`posts!A:H`、`metrics!A:N`、`followers!A:E`、`concept_changes!A:E` を読む。結果を `{"videos": values, "posts": values, ...}` のJSONで `/tmp/sheet.json` に保存し（values が無いタブは見出し行だけでなく空配列にせず、取得できた values をそのまま入れる）、`python3 scripts/louis.py import-sheet /tmp/sheet.json` を実行する。コネクタが使えない・取り込みがエラーになった場合は、リポジトリ内の既存CSVで続行し、日報の「データ品質」にその旨を書く
+0. **Google Sheetsから最新データを取り込む**：`config/project.toml` の `[google].sheet_id` のシートについて、Google Sheetsコネクタの get_values で `動画!A:L`、`投稿!A:H`、`数値!A:N`、`フォロワー!A:E`、`企画変更履歴!A:E`、`素材!A:H` を読む（タブ名・見出し・選択肢は日本語。変換は import-sheet が行う）。結果をタブ名をキーにした `{"動画": values, "投稿": values, ...}` のJSONで `/tmp/sheet.json` に保存し（values が無いタブは見出し行だけでなく空配列にせず、取得できた values をそのまま入れる）、`python3 scripts/louis.py import-sheet /tmp/sheet.json` を実行する。コネクタが使えない・取り込みがエラーになった場合は、リポジトリ内の既存CSVで続行し、日報の「データ品質」にその旨を書く
 1. `inputs/direction.md` と `CLAUDE.md` を読む
 2. `python3 scripts/louis.py validate` を実行。エラーは日報の「データ品質」に載せる
 3. `python3 scripts/louis.py daily $ARGUMENTS` を実行。`reports/daily/YYYY-MM-DD.md` が生成される（①②・未取得データ・コンセプト別集計は確定値）

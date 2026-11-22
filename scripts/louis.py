@@ -419,35 +419,83 @@ def render_review(facts: dict, data: Data, root: Path) -> str:
 # ---------- Google Sheets 取り込み ----------
 
 SHEET_TABS = {"videos": "videos.csv", "posts": "posts.csv", "metrics": "metrics.csv",
-              "followers": "followers.csv", "concept_changes": "concept_changes.csv"}
+              "followers": "followers.csv", "concept_changes": "concept_changes.csv",
+              "materials": "materials.csv"}
+
+# シートは日本語表記。内部（CSV・集計）は英語キーのまま。
+TAB_JA = {"videos": "動画", "posts": "投稿", "metrics": "数値", "followers": "フォロワー",
+          "concept_changes": "企画変更履歴", "materials": "素材"}
+OPTIONAL_TABS = {"materials"}
+
+HEADER_JA = {
+    "videos": ["動画ID", "タイトル", "コンセプト", "企画バージョン", "撮影日", "投稿予定日", "尺（秒）",
+               "編集の工夫", "検証仮説", "振り返り", "次回改善点", "素材の場所"],
+    "posts": ["投稿ID", "動画ID", "媒体", "投稿予定日", "投稿日時", "URL", "状態", "キャプション・フック"],
+    "metrics": ["投稿ID", "計測タイミング", "計測日時", "取得元", "再生数", "リーチ", "平均視聴時間（秒）",
+                "完視聴率（%）", "いいね", "コメント", "保存", "シェア", "フォロー増加", "メモ"],
+    "followers": ["日付", "媒体", "フォロワー数", "確認日時", "取得元"],
+    "concept_changes": ["変更日時", "コンセプト", "変更前", "変更後", "理由"],
+    "materials": ["ファイル名", "撮影日", "長さ（秒）", "何が起きているか", "ルイスの表情・動き",
+                  "使えそうなコンセプト", "使用済み動画ID", "メモ"],
+}
+MATERIALS_KEYS = ["file", "shot_date", "length_sec", "scene", "expression", "concept_fit", "used_in", "note"]
+
+# 選択肢の日本語 → 内部値（英語値はそのまま通す）
+VALUE_JA = {
+    "concept": {"A：ギャップ": "A", "B：事件簿": "B", "C：王子と下僕": "C"},
+    "platform": {"Instagram": "instagram", "TikTok": "tiktok", "インスタ": "instagram"},
+    "status": {"予定": "planned", "編集済み": "ready", "投稿済み": "posted", "見送り": "skipped"},
+    "snapshot": {"24時間後": "24h", "72時間後": "72h", "7日後": "7d", "その他": "other"},
+    "source": {"IGアプリ": "manual_app", "TikTokアプリ": "manual_app", "TikTokスタジオ": "tiktok_studio",
+               "API": "api", "CSV": "csv", "本人申告": "self_report"},
+}
+
+
+def _to_internal(key: str, value: str) -> str:
+    table = VALUE_JA.get(key)
+    if not table or value == "":
+        return value
+    if value in table:
+        return table[value]
+    if key == "concept" and value[:1] in CONCEPTS and (len(value) == 1 or value[1] in "：:"):
+        return value[:1]
+    return value
 
 
 def import_sheet(root: Path, json_path: Path) -> int:
     """get_values の values（2次元配列）をタブごとに受け取り、CSVに書き出す。
-    ヘッダー行は既存CSVと一致している必要がある（列の入れ替え事故を防ぐ）。
+    タブ名・見出し・選択肢は日本語でも英語でもよい（日本語は内部キーに変換）。
+    見出しの並びが想定と違えば中止する（列の入れ替え事故を防ぐ）。
     空行は捨て、行末の欠けたセルは空欄で補う。"""
     import json
     payload = json.loads(json_path.read_text(encoding="utf-8"))
     problems = []
     staged = {}
     for tab, fname in SHEET_TABS.items():
-        if tab not in payload:
-            problems.append(f"タブ {tab} のデータがありません")
+        key = tab if tab in payload else TAB_JA[tab] if TAB_JA[tab] in payload else None
+        if key is None:
+            if tab not in OPTIONAL_TABS:
+                problems.append(f"タブ「{TAB_JA[tab]}」のデータがありません")
             continue
-        rows = payload[tab] or []
+        rows = payload[key] or []
         target = root / "data" / fname
-        with target.open(encoding="utf-8-sig", newline="") as f:
-            expected = next(csv.reader(f))
-        header = [h.strip() for h in rows[0]] if rows else []
-        if header[:len(expected)] != expected:
-            problems.append(f"タブ {tab} の1行目（見出し）が想定と違います：{header}")
+        if tab == "materials":
+            expected = MATERIALS_KEYS
+        else:
+            with target.open(encoding="utf-8-sig", newline="") as f:
+                expected = next(csv.reader(f))
+        header = [str(h).strip() for h in rows[0]] if rows else []
+        n = len(expected)
+        if header[:n] not in (expected, HEADER_JA[tab]):
+            problems.append(f"タブ「{TAB_JA[tab]}」の1行目（見出し）が想定と違います：{header}")
             continue
         body = []
         for r in rows[1:]:
-            cells = [("" if c is None else str(c)).strip() for c in r][:len(expected)]
+            cells = [("" if c is None else str(c)).strip() for c in r][:n]
             if not any(cells):
                 continue
-            body.append(cells + [""] * (len(expected) - len(cells)))
+            cells += [""] * (n - len(cells))
+            body.append([_to_internal(k, v) for k, v in zip(expected, cells)])
         staged[target] = [expected] + body
     if problems:
         for p in problems:
@@ -456,7 +504,7 @@ def import_sheet(root: Path, json_path: Path) -> int:
         return 1
     for target, rows in staged.items():
         with target.open("w", encoding="utf-8", newline="") as f:
-            csv.writer(f).writerows(rows)
+            csv.writer(f, lineterminator="\n").writerows(rows)
         print(f"{target.relative_to(root)}: {len(rows) - 1} 行")
     return 0
 
