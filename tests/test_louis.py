@@ -105,5 +105,44 @@ class EmptyDataTest(unittest.TestCase):
             shutil.rmtree(tmp)
 
 
+class ImportSheetTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copytree(ROOT / "config", self.tmp / "config")
+        shutil.copytree(ROOT / "data", self.tmp / "data")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def _payload(self, **override):
+        import csv as _csv
+        p = {}
+        for tab, fname in louis.SHEET_TABS.items():
+            with (self.tmp / "data" / fname).open(encoding="utf-8") as f:
+                p[tab] = [next(_csv.reader(f))]
+        p.update(override)
+        path = self.tmp / "sheet.json"
+        path.write_text(__import__("json").dumps(p, ensure_ascii=False), encoding="utf-8")
+        return path
+
+    def test_import_pads_and_skips_blank_rows(self):
+        hdr = ["post_id", "video_id", "platform", "scheduled_date", "posted_at", "url", "status", "caption_hook"]
+        vh = ["video_id", "title", "concept", "concept_version", "shot_date", "planned_date", "duration_sec",
+              "edit_techniques", "hypothesis", "retrospective", "next_improvement", "drive_path"]
+        path = self._payload(videos=[vh, ["V001", "テスト", "A"]],
+                             posts=[hdr, ["P001-IG", "V001", "instagram", "2026-11-23", "2026-11-23 19:00", "", "posted"], [], ["", ""]])
+        self.assertEqual(louis.main(["--root", str(self.tmp), "import-sheet", str(path)]), 0)
+        data = louis.load_data(self.tmp)
+        self.assertEqual(len(data.posts), 1)
+        self.assertEqual(data.posts[0]["caption_hook"], "")
+        self.assertEqual(louis.validate(data)[0], [])
+
+    def test_import_rejects_wrong_header(self):
+        before = (self.tmp / "data" / "videos.csv").read_text(encoding="utf-8")
+        path = self._payload(videos=[["title", "video_id"]])
+        self.assertEqual(louis.main(["--root", str(self.tmp), "import-sheet", str(path)]), 1)
+        self.assertEqual((self.tmp / "data" / "videos.csv").read_text(encoding="utf-8"), before)
+
+
 if __name__ == "__main__":
     unittest.main()

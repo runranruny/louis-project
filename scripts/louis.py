@@ -416,6 +416,51 @@ def render_review(facts: dict, data: Data, root: Path) -> str:
     return "\n".join(L)
 
 
+# ---------- Google Sheets 取り込み ----------
+
+SHEET_TABS = {"videos": "videos.csv", "posts": "posts.csv", "metrics": "metrics.csv",
+              "followers": "followers.csv", "concept_changes": "concept_changes.csv"}
+
+
+def import_sheet(root: Path, json_path: Path) -> int:
+    """get_values の values（2次元配列）をタブごとに受け取り、CSVに書き出す。
+    ヘッダー行は既存CSVと一致している必要がある（列の入れ替え事故を防ぐ）。
+    空行は捨て、行末の欠けたセルは空欄で補う。"""
+    import json
+    payload = json.loads(json_path.read_text(encoding="utf-8"))
+    problems = []
+    staged = {}
+    for tab, fname in SHEET_TABS.items():
+        if tab not in payload:
+            problems.append(f"タブ {tab} のデータがありません")
+            continue
+        rows = payload[tab] or []
+        target = root / "data" / fname
+        with target.open(encoding="utf-8-sig", newline="") as f:
+            expected = next(csv.reader(f))
+        header = [h.strip() for h in rows[0]] if rows else []
+        if header[:len(expected)] != expected:
+            problems.append(f"タブ {tab} の1行目（見出し）が想定と違います：{header}")
+            continue
+        body = []
+        for r in rows[1:]:
+            cells = [("" if c is None else str(c)).strip() for c in r][:len(expected)]
+            if not any(cells):
+                continue
+            body.append(cells + [""] * (len(expected) - len(cells)))
+        staged[target] = [expected] + body
+    if problems:
+        for p in problems:
+            print(f"ERROR: {p}", file=sys.stderr)
+        print("取り込みを中止しました（CSVは変更していません）", file=sys.stderr)
+        return 1
+    for target, rows in staged.items():
+        with target.open("w", encoding="utf-8", newline="") as f:
+            csv.writer(f).writerows(rows)
+        print(f"{target.relative_to(root)}: {len(rows) - 1} 行")
+    return 0
+
+
 # ---------- CLI ----------
 
 def main(argv: list[str] | None = None) -> int:
@@ -428,8 +473,14 @@ def main(argv: list[str] | None = None) -> int:
         sp.add_argument("date", nargs="?", help="YYYY-MM-DD（省略時は今日・JST）")
         sp.add_argument("--force", action="store_true", help="既存ファイルを上書き")
         sp.add_argument("--stdout", action="store_true", help="ファイルに保存せず表示")
+    sp = sub.add_parser("import-sheet", help="Google Sheets の get_values 結果(JSON)を data/*.csv に書き出す")
+    sp.add_argument("json_path", help='{"videos": [[...],...], "posts": ..., ...} 形式のJSON')
     a = ap.parse_args(argv)
     root = Path(a.root)
+
+    if a.cmd == "import-sheet":
+        return import_sheet(root, Path(a.json_path))
+
     data = load_data(root)
     errors, warns = validate(data)
 

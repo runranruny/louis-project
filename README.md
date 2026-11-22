@@ -5,16 +5,18 @@
 
 ## 毎日の流れ（人間がやること）
 
-| タイミング | やること | 場所 |
+入力はすべて Google Sheets「[LOUIS 投稿管理](https://docs.google.com/spreadsheets/d/1xrZ2SEG7w8ar_JFlySex5DzXU55ciO8HGAwwDsP_V1k/edit)」で行います（iPhoneのSheetsアプリでOK）。
+
+| タイミング | やること | タブ |
 |---|---|---|
-| 投稿前 | 動画を1行登録し、媒体ごとの投稿予定を2行登録する | `data/videos.csv`・`data/posts.csv` |
-| 投稿後 | `status` を `posted` にし、投稿日時とURLを入れる | `data/posts.csv` |
-| 投稿の24時間後・72時間後 | アプリのインサイトを見て数値を1行ずつ追加 | `data/metrics.csv` |
-| 毎日22時前 | 両媒体のフォロワー数を追加 | `data/followers.csv` |
-| 22:00 | **AIが日報を作成** → `reports/daily/` | 自動 |
+| 投稿前 | 動画を1行登録し、媒体ごとの投稿予定を2行登録する | `videos`・`posts` |
+| 投稿後 | `status` を `posted` にし、投稿日時とURLを入れる | `posts` |
+| 投稿の24時間後・72時間後 | アプリのインサイトを見て数値を1行ずつ追加 | `metrics` |
+| 毎日22時前 | 両媒体のフォロワー数を追加 | `followers` |
+| 22:00 | **AIがシートを読んで日報を作成** → `reports/daily/` | 自動 |
 | 週1回 | `exports/` のレビュー資料をChatGPTに貼り、結論を `inputs/direction.md` に追記 | 手動 |
 
-> 入力にかかる時間の目安は1日5〜10分です。Phase 3でGoogle Sheetsにつなぐと、iPhoneのSheetsアプリから入力できるようになります。
+> 入力の目安は1日5〜10分。見出しのセルをタップすると、その列の説明が出ます。
 
 ## 入力ルール
 - 日時は `2026-11-23 19:00` の形式（日本時間）
@@ -38,6 +40,6 @@ Claude Codeでは `/daily` で日報をフル作成できます（AI社員が③
 
 ## フェーズ
 - [x] Phase 2：MVP（CSV・AI社員・日報）
-- [ ] Phase 3：Google Sheets / Drive 連携
-- [ ] Phase 4：毎日22時の定期実行・エラー通知
+- [x] Phase 3：Google Sheets / Drive 連携（シート読み込み・Driveフォルダ）
+- [x] Phase 4：毎日22時の定期実行（失敗時もCSVで続行し、日報に記録）
 - [ ] Phase 5：週報・コンセプト比較の強化・ChatGPT API連携の検討（費用見積もりと承認のあとで）

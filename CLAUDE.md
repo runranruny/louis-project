@@ -10,7 +10,8 @@
 | パス | 中身 |
 |---|---|
 | `config/project.toml` | 期間・目標・コンセプト内訳・開始時フォロワー |
-| `data/*.csv` | 投稿管理データ（下記スキーマ）。**人間が入力する唯一の場所** |
+| Google Sheets「LOUIS 投稿管理」 | **人間が入力する唯一の場所**（IDは `config/project.toml` の `[google]`）。AIは読むだけで書き換えない |
+| `data/*.csv` | シートのスナップショット（日報作成時に `import-sheet` で上書き）。スキーマは下記 |
 | `inputs/direction.md` | ChatGPT等で決めた改善方針。毎回必ず読んで反映する |
 | `reports/daily/` | 日報（`YYYY-MM-DD.md`） |
 | `reports/weekly/` | 週報 |

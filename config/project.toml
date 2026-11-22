@@ -31,6 +31,13 @@ name = "王子と下僕系"
 theme = "わがまま王子と不憫な下僕。"
 planned = 9
 
+[google]
+# 人間が入力する投稿管理シート（タブ名 = data/ のCSV名）
+sheet_id = "1xrZ2SEG7w8ar_JFlySex5DzXU55ciO8HGAwwDsP_V1k"
+sheet_url = "https://docs.google.com/spreadsheets/d/1xrZ2SEG7w8ar_JFlySex5DzXU55ciO8HGAwwDsP_V1k/edit"
+drive_root_folder_id = "1yi0fVn-5HzGdNEpm9svj9t_AubfMCYxV"
+drive_reports_folder_id = "1dr9Sg8jdaz9f53EOBHugi7VToCc1fgXr"
+
 # 開始時点のフォロワー（2026-11-22 本人申告）
 [baseline]
 date = "2026-11-22"
