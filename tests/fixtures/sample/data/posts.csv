@@ -1,0 +1,7 @@
+post_id,video_id,platform,scheduled_date,posted_at,url,status,caption_hook
+P001-IG,V001,instagram,2026-11-23,2026-11-23 19:00,https://instagram.com/p/x1,posted,
+P001-TT,V001,tiktok,2026-11-23,2026-11-23 19:05,https://tiktok.com/@louis_rd_0723/video/1,posted,
+P002-IG,V002,instagram,2026-11-24,2026-11-24 19:00,https://instagram.com/p/x2,posted,
+P002-TT,V002,tiktok,2026-11-24,2026-11-24 19:10,,posted,
+P003-IG,V003,instagram,2026-11-25,,,ready,
+P003-TT,V003,tiktok,2026-11-25,2026-11-25 20:00,https://tiktok.com/@louis_rd_0723/video/3,posted,

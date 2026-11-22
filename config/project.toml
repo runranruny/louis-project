@@ -1,0 +1,38 @@
+# LOUIS PROJECT 設定（目標を見直すときはここを編集し、理由を docs/goal-history.md に残す）
+
+[period]
+start = "2026-11-23"
+end = "2026-12-31"
+
+[targets]
+videos = 30              # オリジナル動画本数
+posts_per_platform = 30  # 各媒体の投稿本数
+
+# 成果目標（挑戦目標。達成保証ではない）
+[targets.followers]
+instagram = 500
+tiktok = 1000
+
+[targets.max_views_single_video]
+value = 50000
+
+[concepts.A]
+name = "ギャップ系"
+theme = "顔だけ天使。中身は悪魔。"
+planned = 12
+
+[concepts.B]
+name = "事件簿系"
+theme = "極悪ニャンコの犯罪日誌。"
+planned = 9
+
+[concepts.C]
+name = "王子と下僕系"
+theme = "わがまま王子と不憫な下僕。"
+planned = 9
+
+# 開始時点のフォロワー（2026-11-22 本人申告）
+[baseline]
+date = "2026-11-22"
+instagram = 86
+tiktok = 0

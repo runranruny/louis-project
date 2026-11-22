@@ -1,0 +1,4 @@
+video_id,title,concept,concept_version,shot_date,planned_date,duration_sec,edit_techniques,hypothesis,retrospective,next_improvement,drive_path
+V001,この顔に騙されてはいけません,A,1,2026-11-22,2026-11-23,14,ズーム→無音の間→効果音,冒頭の顔アップで2秒維持率が上がる,,,
+V002,容疑者ルイス、現行犯逮捕,B,1,2026-11-23,2026-11-24,22,ニュース風テロップ,事件簿フォーマットはシェアされやすい,,,
+V003,下僕に休日はありません,,1,2026-11-24,2026-11-25,18,,,,,
