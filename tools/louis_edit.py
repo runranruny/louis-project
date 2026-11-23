@@ -102,6 +102,15 @@ class Editor:
             return
         self._clip([self._base(cx), *self._filters(extra)], ["-loop", "1", "-t", str(dur), "-i", str(png)])
 
+    def image(self, path, dur, extra=(), cx=0.5):
+        """写真（縦長）を9:16に切り抜いて dur 秒表示"""
+        self._record("写真", Path(path).name, 1.0, dur, extra)
+        base = f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H}:x=(iw-{W})*{cx}:y=(ih-{H})/2"
+        if self.mode == "parts":
+            _run(["-i", str(path), "-vf", base, str(self.out / f"{len(self.log):02d}_写真.jpg")])
+            return
+        self._clip([base, *self._filters(extra)], ["-loop", "1", "-t", str(dur), "-i", str(path)])
+
     def color(self, dur, color="black", extra=()):
         self._record({"white": "白い画面", "black": "黒い画面"}.get(color, color), "-", 1.0, dur, extra)
         if self.mode == "parts":
